@@ -1,0 +1,84 @@
+version: "3.9"
+
+x-template-common: &common-service
+  restart: always
+  logging:
+    driver: json-file
+  networks:
+    - net
+    
+x-template-client: &client-service
+  <<: *common-service
+  depends_on:
+    - api
+    
+x-template-wb: &wb-service
+  <<: *common-service
+  depends_on:
+    - websocketserver
+  links:
+    - "websocketserver:wb"
+    
+networks:
+  net:
+  
+services:
+  writter:
+    <<: *client-service
+    container_name: writter
+    build:
+      context: .
+      dockerfile: ./src/testWorkKoshelek.WritterClient/Dockerfile
+    environment:
+      - ApiOptions__Uri=http://api:80/api/
+    ports: 
+      - 5183:80
+  getter:
+    <<: *client-service
+    container_name: getter-by-period
+    build:
+      context: .
+      dockerfile: ./src/testWorkKoshelek.GetterClient/Dockerfile
+    environment:
+      - ApiOptions__Uri=http://api:80/api/
+    ports:
+      - 5190:80
+  websocketserver:
+    <<: *common-service
+    container_name: websocket-server
+    build:
+      context: .
+      dockerfile: ./src/testWorkKoshelek.WebSocketServer/Dockerfile
+    ports:
+      - 5000:80
+  api:
+    <<: *wb-service
+    container_name: api
+    build:
+      context: .
+      dockerfile: ./src/testWorkKoshelek.API/Dockerfile
+    depends_on:
+      - postgres
+    links:
+      - "postgres:storage"
+    environment:
+      - DbOptions__ConnectionString=Server=storage;Port=5432;User Id=postgres;Password=postgres;Database=myDb
+      - DbOptions__Scheme=${DB_Scheme}
+      - DbOptions__CommandTimeOut=${DB_TimeOut}
+      - WebSocketOptions__Uri=ws://host.docker.internal:5000/ws/
+    ports:
+      - 5200:80
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+  reader:
+    <<: *wb-service
+    container_name: reader
+    build:
+      context: .
+      dockerfile: ./src/testWorkKoshelek.ReaderClient/Dockerfile
+    environment:
+      - WebSocketOptions__Uri=ws://host.docker.internal:5000/ws/
+    ports:
+      - 5059:80
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,49 @@
+﻿@model testWorkKoshelek.WritterClient.Models.SendModel
+
+@{
+    ViewData["Title"] = "Отправка нового сообщения";
+}
+
+<h1>Отправка нового сообщения</h1>
+
+<hr />
+
+@using (Html.BeginForm())
+{
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="form-group">
+                    @Html.LabelFor(model => model.Text, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-10">
+                        @Html.EditorFor(model => model.Text, new { htmlAttributes = new { @class = "form-control" } })
+                        @Html.ValidationMessageFor(model => model.Text, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Отправить" class="btn btn-primary" />
+                </div>
+            </form>
+        </div>
+    </div>
+
+    @if (ViewData["Error"] != null)
+    {
+        <div class="red">
+            <p><strong>Error:</strong> @ViewData["Error"].ToString()</p>
+        </div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="green">
+            <p><strong>Success:</strong> @TempData["Success"].ToString()</p>
+        </div>
+    }
+}
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

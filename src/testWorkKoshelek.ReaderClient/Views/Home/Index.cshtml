@@ -1,0 +1,47 @@
+﻿@{
+    ViewData["Title"] = "Index";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Сообщения в реальном времени</h1>
+
+    <ul id="chat-box"></ul>
+</div>
+
+<script type="text/javascript">
+    var id = null;
+    var socket = null; 
+    var number = 0;
+    
+    const chatBox = document.getElementById("chat-box");
+
+    const openWebSocketConnection = () => {
+        socket = new WebSocket(`@TempData["Uri"]`);
+        socket.onopen = function (event) {
+            console.log('Сокет подключён');
+        };
+
+        socket.addEventListener("close", (event) => {
+            console.log("Подключение к вебсокету успешно закрыто");
+        });
+
+        socket.onmessage = function (event) {
+            console.log("Пришло сообщение: " + event.data);
+            let message = event.data.substring(18);
+            appendMessage(message);
+        };
+    }
+
+    const appendMessage = (message) => {
+        let messageDiv = document.createElement("div");
+        let msg = JSON.parse(message);
+        console.log(msg);
+        messageDiv.innerHTML = `Numb: ${++number}  | Text: ${msg.Text} | CreatedDate: ${msg.CreatedDate}`;
+
+        chatBox.appendChild(messageDiv)
+    }
+
+    addEventListener("DOMContentLoaded", (event) => {
+        openWebSocketConnection();
+    });
+</script>
